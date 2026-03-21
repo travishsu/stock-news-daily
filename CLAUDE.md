@@ -6,10 +6,11 @@
 
 使用者會說「看有沒有最新一集」或類似指令。流程：
 
-1. 執行 `bash scripts/fetch.sh` 抓取所有頻道最新影片字幕
-2. 讀取 `subtitles/` 資料夾中的 .vtt / .srt 檔案
-3. 對每個檔案進行摘要與分析
-4. 產出一份 Markdown 日報存到 `reports/YYYY-MM-DD.md`
+1. 執行 `uv run scripts/trump_code.py` 抓取川普推文每日分析
+2. 執行 `bash scripts/fetch.sh` 抓取所有頻道最新影片字幕
+3. 讀取 `subtitles/` 資料夾中的 .vtt / .srt 檔案
+4. 對每個檔案進行摘要與分析
+5. 產出一份 Markdown 日報存到 `reports/YYYY-MM-DD.md`
 
 ## 頻道清單
 
@@ -18,16 +19,29 @@
 
 ## 指令
 
+- `uv run scripts/trump_code.py` — 抓取川普當日推文分析
 - `bash scripts/fetch.sh` — 抓取所有頻道最近一支影片的字幕，存到 `subtitles/`
 - `bash scripts/fetch.sh @kukantieh` — 只抓特定頻道
 
-字幕檔命名規則：`{handle}_{videoId}_{lang}.vtt`
+字幕檔命名規則：`subtitles/YYYY-MM-DD/{handle}_{videoId}_{lang}.vtt`（語言優先順序：zh-TW → zh-Hans → en）
+
+## 川普推文分析
+
+執行 `uv run scripts/trump_code.py`，輸出包含：
+
+- 今日推文篇數
+- 觸發的交易信號（看多/看空組數）
+- 偵測到的關鍵字（如「伊朗」、「關稅」等地緣政治/貿易詞彙）
+- 歷史命中率（信號準確度參考）
+- 最新推文節錄
+
+將川普推文分析納入日報的「觀望因素」，若有明確看多/看空信號則列入對應方向。
 
 ## 分析規則
 
 對每支影片的字幕，產出以下結構：
 
-```
+```markdown
 ### {頻道名稱}：{影片標題}
 - **發布時間**：YYYY-MM-DD
 - **摘要**（3-5 個重點，每點一句話）

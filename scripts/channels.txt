@@ -1,7 +1,8 @@
 # 中文頻道
-@yutinghao-finance    # 游庭皓的財經皓角 — 每日盤前總經直播
+@yutinghaofinance     # 游庭皓的財經皓角 — 每日盤前總經直播
 @kukantieh            # 股乾爹 KuKanTieh — 總經數據分析
 @nanashuomeigu        # NaNa說美股 — 每日美股新聞
+@miulaviewpoint       # M 觀點
 
 # 英文頻道
 @YahooFinance         # Yahoo Finance — 市場綜合新聞

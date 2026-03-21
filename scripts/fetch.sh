@@ -24,32 +24,83 @@ get_channels() {
     grep -v '^\s*#' "$CHANNELS_FILE" | grep -v '^\s*$' | awk '{print $1}'
 }
 
-# 抓取單一頻道的最新影片字幕
+# 抓取單一頻道的最新影片字幕（含直播）
 fetch_channel() {
     local handle="$1"
-    local url="https://www.youtube.com/${handle}/videos"
 
     echo "=== 正在處理: $handle ==="
 
-    # 抓取最新一支影片的字幕（優先手動字幕，退而求其次自動字幕）
-    # --playlist-items 1 只抓第一支（最新）
-    # --skip-download 不下載影片本身
-    # --write-sub 寫入手動字幕
-    # --write-auto-sub 寫入自動字幕
-    # --sub-lang 優先中文，其次英文
-    # --convert-subs vtt 統一格式
-    yt-dlp \
-        --playlist-items 1 \
-        --skip-download \
-        --write-sub \
-        --write-auto-sub \
-        --sub-lang "zh-Hant,zh-Hans,zh,en" \
-        --convert-subs vtt \
-        --output "$SUB_DIR/${handle}_%(id)s" \
-        --no-overwrites \
-        --ignore-errors \
-        --print-to-file "%(id)s|%(title)s|%(upload_date)s|%(channel)s" "$SUB_DIR/${handle}_meta.txt" \
-        "$url" 2>&1 | grep -v "^\[debug\]" || true
+    # 分別查詢 /videos 和 /streams，取最新的一支
+    local best_meta="" best_url="" best_date=""
+    for tab in "videos" "streams"; do
+        local url="https://www.youtube.com/${handle}/${tab}"
+        local meta
+        meta=$(yt-dlp \
+            --playlist-items 1 \
+            --skip-download \
+            --quiet \
+            --no-warnings \
+            --print "%(upload_date>%Y-%m-%d,unknown)s|%(id)s|%(title)s|%(channel)s" \
+            "$url" 2>/dev/null | head -1) || true
+
+        [ -z "$meta" ] && continue
+
+        local d="${meta%%|*}"
+        if [ -z "$best_date" ] || [[ "$d" > "$best_date" ]]; then
+            best_date="$d"
+            best_meta="$meta"
+            best_url="$url"
+        fi
+    done
+
+    if [ -z "$best_meta" ]; then
+        echo "  [skip] 無法取得影片資訊"
+        echo ""
+        return
+    fi
+
+    local meta="$best_meta"
+    local url="$best_url"
+    local date video_id title channel
+    IFS='|' read -r date video_id title channel <<< "$meta"
+
+    local date_dir="$SUB_DIR/$date"
+    mkdir -p "$date_dir"
+
+    # 寫入 metadata
+    echo "$video_id|$title|$date|$channel" > "$date_dir/${handle}_meta.txt"
+    echo "  影片：$title ($date)"
+
+    # 依優先順序嘗試下載字幕：台灣繁中 → 簡中 → 英文
+    local -a LANG_PRIORITY=("zh-TW" "zh-Hans" "en")
+
+    for lang in "${LANG_PRIORITY[@]}"; do
+        local out_file="$date_dir/${handle}_${video_id}.${lang}.vtt"
+
+        # 已存在則直接使用
+        if [ -f "$out_file" ]; then
+            echo "  [skip] 已有字幕 ($lang)"
+            break
+        fi
+
+        # 嘗試下載該語言字幕（手動優先，自動補位）
+        yt-dlp \
+            --playlist-items 1 \
+            --skip-download \
+            --write-sub \
+            --write-auto-sub \
+            --sub-lang "$lang" \
+            --convert-subs vtt \
+            --output "$date_dir/${handle}_%(id)s" \
+            --no-overwrites \
+            --ignore-errors \
+            "$url" 2>&1 | grep -v "^\[debug\]" || true
+
+        if [ -f "$out_file" ]; then
+            echo "  [ok] 字幕已下載 ($lang): $(basename "$out_file")"
+            break
+        fi
+    done
 
     echo ""
 }
