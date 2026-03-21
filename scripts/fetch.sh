@@ -8,8 +8,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-CHANNELS_FILE="$SCRIPT_DIR/channels.txt"
-PLAYLISTS_FILE="$SCRIPT_DIR/playlists.txt"
+CHANNELS_FILE="$PROJECT_DIR/sources/channels.txt"
+PLAYLISTS_FILE="$PROJECT_DIR/sources/playlists.txt"
 SUB_DIR="$PROJECT_DIR/subtitles"
 
 mkdir -p "$SUB_DIR"

@@ -14,8 +14,9 @@
 
 ## 頻道清單
 
-定義在 `scripts/channels.txt`，格式為每行一個 YouTube handle 或頻道 ID，# 開頭為註解。
-新增或移除頻道只改這個檔案。
+定義在 `sources/channels.txt`，格式為每行一個 YouTube handle 或頻道 ID，# 開頭為註解。
+Podcast 定義在 `sources/podcasts.txt`，播放清單定義在 `sources/playlists.txt`。
+新增或移除來源只改對應的 `sources/` 檔案。
 
 ## 指令
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fetch latest episodes from podcasts listed in scripts/podcasts.txt,
+Fetch latest episodes from podcasts listed in sources/podcasts.txt,
 download audio to audios/, transcribe with mlx-whisper,
 and output VTT + TXT to subtitles/YYYY-MM-DD/ (same structure as fetch.sh).
 
@@ -22,7 +22,7 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 ROOT = Path(__file__).parent.parent
 AUDIOS_DIR = ROOT / "audios"
 SUBTITLES_DIR = ROOT / "subtitles"
-PODCASTS_TXT = Path(__file__).parent / "podcasts.txt"
+PODCASTS_TXT = Path(__file__).parent.parent / "sources" / "podcasts.txt"
 VTT_TO_TXT = Path(__file__).parent / "vtt_to_txt.py"
 
 
@@ -40,37 +40,40 @@ def load_podcasts() -> list[dict]:
     return podcasts
 
 
-def fetch_rss(rss_url: str) -> dict:
-    """Parse RSS and return latest episode info."""
+def fetch_rss(rss_url: str, limit: int = 10) -> list[dict]:
+    """Parse RSS and return up to `limit` latest episodes."""
     req = urllib.request.Request(rss_url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=15) as resp:
         raw = resp.read()
 
     root = ET.fromstring(raw)
     channel = root.find("channel")
-    item = channel.find("item")
+    episodes = []
 
-    title = item.findtext("title", "").strip()
-    pub_date_str = item.findtext("pubDate", "").strip()
-    enclosure = item.find("enclosure")
-    audio_url = enclosure.attrib.get("url", "") if enclosure is not None else ""
+    for item in list(channel.findall("item"))[:limit]:
+        title = item.findtext("title", "").strip()
+        pub_date_str = item.findtext("pubDate", "").strip()
+        enclosure = item.find("enclosure")
+        audio_url = enclosure.attrib.get("url", "") if enclosure is not None else ""
 
-    # Parse pub date → YYYY-MM-DD (RSS uses "GMT" which %z doesn't handle)
-    for fmt in ("%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S GMT"):
-        try:
-            pub_dt = datetime.strptime(pub_date_str, fmt)
-            break
-        except ValueError:
-            continue
-    else:
-        pub_dt = datetime.now(timezone.utc)
-    date_str = pub_dt.strftime("%Y-%m-%d")
+        # Parse pub date → YYYY-MM-DD (RSS uses "GMT" which %z doesn't handle)
+        for fmt in ("%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S GMT"):
+            try:
+                pub_dt = datetime.strptime(pub_date_str, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            pub_dt = datetime.now(timezone.utc)
+        date_str = pub_dt.strftime("%Y-%m-%d")
 
-    # Episode ID from RSS <guid>
-    guid = item.findtext("guid", "").strip()
-    ep_id = guid.split("/")[-1] if guid else Path(audio_url.split("?")[0]).stem
+        # Episode ID from RSS <guid>
+        guid = item.findtext("guid", "").strip()
+        ep_id = guid.split("/")[-1] if guid else Path(audio_url.split("?")[0]).stem
 
-    return {"title": title, "date": date_str, "audio_url": audio_url, "ep_id": ep_id}
+        episodes.append({"title": title, "date": date_str, "audio_url": audio_url, "ep_id": ep_id})
+
+    return episodes
 
 
 def already_done(subtitle_dir: Path, handle: str, ep_id: str) -> bool:
@@ -150,28 +153,33 @@ def process(podcast: dict) -> None:
     handle, rss_url, name = podcast["handle"], podcast["rss_url"], podcast["name"]
     print(f"\n=== {name} ({handle}) ===")
 
-    ep = fetch_rss(rss_url)
-    print(f"  Latest: {ep['title']} ({ep['date']})")
+    episodes = fetch_rss(rss_url)
+    print(f"  Found {len(episodes)} episode(s)")
 
-    subtitle_dir = SUBTITLES_DIR / ep["date"]
-    subtitle_dir.mkdir(parents=True, exist_ok=True)
+    for ep in episodes:
+        print(f"  -- {ep['title']} ({ep['date']})")
 
-    if already_done(subtitle_dir, handle, ep["ep_id"]):
-        print("  Already transcribed, skipping.")
-        return
+        subtitle_dir = SUBTITLES_DIR / ep["date"]
+        subtitle_dir.mkdir(parents=True, exist_ok=True)
 
-    audio_path = AUDIOS_DIR / f"{handle}_{ep['ep_id']}.mp3"
-    vtt_path = subtitle_dir / f"{handle}_{ep['ep_id']}_zh.vtt"
-    txt_path = subtitle_dir / f"{handle}_{ep['ep_id']}_zh.txt"
+        if already_done(subtitle_dir, handle, ep["ep_id"]):
+            print("  Already transcribed, skipping.")
+            continue
 
-    if not audio_path.exists():
-        download_audio(ep["audio_url"], audio_path)
-    else:
-        print(f"  [dl] cached {audio_path.name}")
+        audio_path = AUDIOS_DIR / f"{handle}_{ep['ep_id']}.mp3"
+        vtt_path = subtitle_dir / f"{handle}_{ep['ep_id']}_zh.vtt"
+        txt_path = subtitle_dir / f"{handle}_{ep['ep_id']}_zh.txt"
 
-    transcribe(audio_path, vtt_path)
-    run_vtt_to_txt(vtt_path, txt_path)
-    write_meta(subtitle_dir, handle, ep["ep_id"], ep["title"], ep["date"], name)
+        if not audio_path.exists():
+            download_audio(ep["audio_url"], audio_path)
+        else:
+            print(f"  [dl] cached {audio_path.name}")
+
+        transcribe(audio_path, vtt_path)
+        run_vtt_to_txt(vtt_path, txt_path)
+        write_meta(subtitle_dir, handle, ep["ep_id"], ep["title"], ep["date"], name)
+        audio_path.unlink()
+        print(f"  [rm] {audio_path.name}")
 
 
 def main() -> None:
