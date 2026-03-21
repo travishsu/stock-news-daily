@@ -8,8 +8,13 @@
 @riverstockshow
 @588vip
 @win58899
+@oldwangstock
+@jcinsight
 
 # 英文頻道
 @YahooFinance         # Yahoo Finance — 市場綜合新聞
 @Bloomberg            # Bloomberg Television — 全球總經
 @CNBCtelevision       # CNBC Television — 美股市場新聞, Mad Money
+@RealEismanPlaybook
+@PBoyle
+@AswathDamodaranonValuation

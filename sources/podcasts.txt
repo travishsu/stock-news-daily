@@ -6,3 +6,4 @@
 
 @gooaye  https://feeds.soundon.fm/podcasts/954689a5-3096-43a4-a80b-7810b219cef3.xml  股癌 Gooaye
 @wealthmag https://feeds.soundon.fm/podcasts/f9b8df6f-b612-4a27-8335-cfd2103c1aa4.xml 財訊雙週刊
+@macromicro https://feeds.soundon.fm/podcasts/d2aab16c-3a70-4023-b52b-e50f07852ecd.xml MacroMicro 財經M平方
