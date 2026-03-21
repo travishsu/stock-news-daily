@@ -1,4 +1,8 @@
+audios/
 subtitles/
 *.vtt
 *.srt
 *_meta.txt
+
+.venv/
+__pycache__/
