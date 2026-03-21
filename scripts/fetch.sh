@@ -80,6 +80,11 @@ fetch_channel() {
         # 已存在則直接使用
         if [ -f "$out_file" ]; then
             echo "  [skip] 已有字幕 ($lang)"
+            # 若尚未有對應 .txt 則補產生
+            local txt_file="${out_file%.vtt}.txt"
+            if [ ! -f "$txt_file" ]; then
+                uv run "$SCRIPT_DIR/vtt_to_txt.py" "$out_file" || true
+            fi
             break
         fi
 
@@ -98,6 +103,8 @@ fetch_channel() {
 
         if [ -f "$out_file" ]; then
             echo "  [ok] 字幕已下載 ($lang): $(basename "$out_file")"
+            # 轉換為可讀純文字（5 分鐘一段落）
+            uv run "$SCRIPT_DIR/vtt_to_txt.py" "$out_file" || true
             break
         fi
     done
