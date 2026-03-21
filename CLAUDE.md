@@ -8,7 +8,7 @@
 
 1. 執行 `uv run scripts/trump_code.py` 抓取川普推文每日分析
 2. 執行 `bash scripts/fetch.sh` 抓取所有頻道最新影片字幕
-3. 讀取 `subtitles/` 資料夾中的 .vtt / .srt 檔案
+3. 讀取 `subtitles/YYYY-MM-DD/` 資料夾（今天日期）中的 .txt 檔案（已由 vtt_to_txt.py 轉換）；若該資料夾不存在，表示今日未抓到字幕，在日報中說明
 4. 對每個檔案進行摘要與分析
 5. 產出一份 Markdown 日報存到 `reports/YYYY-MM-DD.md`
 
