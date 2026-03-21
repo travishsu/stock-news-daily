@@ -1,0 +1,8 @@
+# Podcast 來源清單
+# 格式：@handle  rss_url  頻道名稱
+# @handle     用於檔案命名（與 channels.txt 的 YouTube handle 格式一致）
+# rss_url     RSS feed URL
+# 頻道名稱    顯示用，寫入 meta.txt
+
+@gooaye  https://feeds.soundon.fm/podcasts/954689a5-3096-43a4-a80b-7810b219cef3.xml  股癌 Gooaye
+@wealthmag https://feeds.soundon.fm/podcasts/f9b8df6f-b612-4a27-8335-cfd2103c1aa4.xml 財訊雙週刊

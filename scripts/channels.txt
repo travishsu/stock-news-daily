@@ -3,8 +3,10 @@
 @kukantieh            # 股乾爹 KuKanTieh — 總經數據分析
 @nanashuomeigu        # NaNa說美股 — 每日美股新聞
 @miulaviewpoint       # M 觀點
+@汪潔民-財富汪得福      
+@EBCmoneyshow
 
 # 英文頻道
 @YahooFinance         # Yahoo Finance — 市場綜合新聞
 @Bloomberg            # Bloomberg Television — 全球總經
-@CNBCtelevision       # CNBC Television — 美股市場新聞
+@CNBCtelevision       # CNBC Television — 美股市場新聞, Mad Money

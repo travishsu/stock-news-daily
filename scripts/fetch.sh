@@ -9,6 +9,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CHANNELS_FILE="$SCRIPT_DIR/channels.txt"
+PLAYLISTS_FILE="$SCRIPT_DIR/playlists.txt"
 SUB_DIR="$PROJECT_DIR/subtitles"
 
 mkdir -p "$SUB_DIR"
@@ -22,6 +23,11 @@ fi
 # 讀取頻道列表，過濾註解和空行
 get_channels() {
     grep -v '^\s*#' "$CHANNELS_FILE" | grep -v '^\s*$' | awk '{print $1}'
+}
+
+# 讀取播放清單，過濾註解和空行（格式：name URL）
+get_playlists() {
+    grep -v '^\s*#' "$PLAYLISTS_FILE" | grep -v '^\s*$'
 }
 
 # 抓取單一頻道的最新影片字幕（含直播）
@@ -112,6 +118,72 @@ fetch_channel() {
     echo ""
 }
 
+# 抓取播放清單最新一支影片的字幕
+fetch_playlist() {
+    local name="$1"
+    local playlist_url="$2"
+
+    echo "=== 正在處理 playlist: $name ==="
+
+    local meta
+    meta=$(yt-dlp \
+        --playlist-items 1 \
+        --skip-download \
+        --quiet \
+        --no-warnings \
+        --print "%(upload_date>%Y-%m-%d,unknown)s|%(id)s|%(title)s|%(channel)s" \
+        "$playlist_url" 2>/dev/null | head -1) || true
+
+    if [ -z "$meta" ]; then
+        echo "  [skip] 無法取得播放清單資訊"
+        echo ""
+        return
+    fi
+
+    local date video_id title channel
+    IFS='|' read -r date video_id title channel <<< "$meta"
+
+    local date_dir="$SUB_DIR/$date"
+    mkdir -p "$date_dir"
+
+    echo "$video_id|$title|$date|$channel" > "$date_dir/${name}_meta.txt"
+    echo "  影片：$title ($date)"
+
+    local -a LANG_PRIORITY=("zh-TW" "zh-Hans" "en")
+    for lang in "${LANG_PRIORITY[@]}"; do
+        local out_file="$date_dir/${name}_${video_id}.${lang}.vtt"
+
+        if [ -f "$out_file" ]; then
+            echo "  [skip] 已有字幕 ($lang)"
+            local txt_file="${out_file%.vtt}.txt"
+            if [ ! -f "$txt_file" ]; then
+                uv run "$SCRIPT_DIR/vtt_to_txt.py" "$out_file" || true
+            fi
+            break
+        fi
+
+        yt-dlp \
+            --playlist-items 1 \
+            --skip-download \
+            --write-sub \
+            --write-auto-sub \
+            --sub-lang "$lang" \
+            --convert-subs vtt \
+            --output "$date_dir/${name}_%(id)s" \
+            --no-overwrites \
+            --ignore-errors \
+            "$playlist_url" 2>&1 | grep -v "^\[debug\]" || true
+
+        if [ -f "$out_file" ]; then
+            echo "  [ok] 字幕已下載 ($lang): $(basename "$out_file")"
+            uv run "$SCRIPT_DIR/vtt_to_txt.py" "$out_file" || true
+            break
+        fi
+    done
+
+    echo ""
+}
+
 # 主邏輯
 if [ $# -gt 0 ]; then
     # 指定頻道
@@ -121,6 +193,11 @@ else
     while IFS= read -r handle; do
         fetch_channel "$handle"
     done < <(get_channels)
+
+    # 所有播放清單
+    while IFS=' ' read -r name url; do
+        fetch_playlist "$name" "$url"
+    done < <(get_playlists)
 fi
 
 echo "=== 完成 ==="
