@@ -1,0 +1,7 @@
+# Per-source initial prompts for mlx-whisper transcription.
+# Format: <handle> <TAB> <prompt>
+# Handle must match the @ handle in channels.txt / podcasts.txt.
+
+@gooaye	股癌 Podcast，主持人謝孟恭（Gooaye），聊美股、台股、ETF、選擇權、Fed、財報、總體經濟、投資策略。
+@wealthmag	財訊雙週刊，主持人謝金河，討論台股、美股、總經、產業趨勢、上市公司。
+@汪潔民-財富汪得福	財富汪得福，主持人汪潔民（前運昇投顧執行長），討論資本市場定價、台股、美股、台積電、AI晶片、供應鏈、總體經濟、國際經濟數據、投資策略。

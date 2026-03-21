@@ -29,8 +29,24 @@ UA = os.environ.get(
 ROOT = Path(__file__).parent.parent
 AUDIOS_DIR = ROOT / "audios"
 SUBTITLES_DIR = ROOT / "subtitles"
-PODCASTS_TXT = Path(__file__).parent.parent / "sources" / "podcasts.txt"
+PODCASTS_TXT = ROOT / "sources" / "podcasts.txt"
+WHISPER_PROMPTS_TXT = ROOT / "sources" / "whisper_prompts.txt"
 TRANSCRIBE_PY = Path(__file__).parent / "transcribe.py"
+
+
+def load_prompts() -> dict[str, str]:
+    """Parse whisper_prompts.txt and return {handle: prompt}."""
+    prompts: dict[str, str] = {}
+    if not WHISPER_PROMPTS_TXT.exists():
+        return prompts
+    for line in WHISPER_PROMPTS_TXT.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("\t", 1)
+        if len(parts) == 2:
+            prompts[parts[0]] = parts[1]
+    return prompts
 
 
 def load_podcasts() -> list[dict]:
@@ -119,7 +135,7 @@ def write_meta(subtitle_dir: Path, handle: str, ep_id: str, title: str, date: st
     print(f"  [meta] {meta.name}")
 
 
-def process(podcast: dict) -> None:
+def process(podcast: dict, initial_prompt: str | None = None) -> None:
     handle, rss_url, name = podcast["handle"], podcast["rss_url"], podcast["name"]
     print(f"\n=== {name} ({handle}) ===")
 
@@ -144,11 +160,11 @@ def process(podcast: dict) -> None:
         else:
             print(f"  [dl] cached {audio_path.name}")
 
-        subprocess.run(
-            [sys.executable, str(TRANSCRIBE_PY), str(audio_path), str(vtt_path),
-             "--language", os.environ.get("TRANSCRIBE_LANGUAGE", "zh"), "--txt"],
-            check=True,
-        )
+        cmd = [sys.executable, str(TRANSCRIBE_PY), str(audio_path), str(vtt_path),
+               "--language", os.environ.get("TRANSCRIBE_LANGUAGE", "zh"), "--txt"]
+        if initial_prompt:
+            cmd += ["--initial-prompt", initial_prompt]
+        subprocess.run(cmd, check=True)
         write_meta(subtitle_dir, handle, ep["ep_id"], ep["title"], ep["date"], name)
         audio_path.unlink()
         print(f"  [rm] {audio_path.name}")
@@ -168,8 +184,9 @@ def main() -> None:
             print(f"Handle {target!r} not found in podcasts.txt")
             sys.exit(1)
 
+    prompts = load_prompts()
     for podcast in podcasts:
-        process(podcast)
+        process(podcast, initial_prompt=prompts.get(podcast["handle"]))
 
     print("\nDone.")
 

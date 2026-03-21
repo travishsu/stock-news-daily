@@ -41,6 +41,7 @@ def main() -> None:
     parser.add_argument("--language", default=DEFAULT_LANGUAGE, help="Whisper language code (default: zh)")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="mlx-whisper model repo or path")
     parser.add_argument("--txt", action="store_true", help="Also produce .txt via vtt_to_txt.py")
+    parser.add_argument("--initial-prompt", default=None, help="Whisper initial prompt for domain vocabulary")
     args = parser.parse_args()
 
     audio_path = Path(args.audio_file)
@@ -59,6 +60,7 @@ def main() -> None:
         word_timestamps=False,
         language=args.language,
         verbose=False,
+        initial_prompt=args.initial_prompt or None,
     )
 
     segments = result.get("segments", [])
