@@ -16,14 +16,13 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
-WHISPER_MODEL = "mlx-community/whisper-large-v3-turbo"
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 ROOT = Path(__file__).parent.parent
 AUDIOS_DIR = ROOT / "audios"
 SUBTITLES_DIR = ROOT / "subtitles"
 PODCASTS_TXT = Path(__file__).parent.parent / "sources" / "podcasts.txt"
-VTT_TO_TXT = Path(__file__).parent / "vtt_to_txt.py"
+TRANSCRIBE_PY = Path(__file__).parent / "transcribe.py"
 
 
 def load_podcasts() -> list[dict]:
@@ -103,45 +102,6 @@ def download_audio(audio_url: str, dest: Path) -> None:
     print()
 
 
-def transcribe(audio_path: Path, vtt_path: Path) -> None:
-    print(f"  [whisper] transcribing {audio_path.name} ...")
-    import mlx_whisper
-
-    result = mlx_whisper.transcribe(
-        str(audio_path),
-        path_or_hf_repo=WHISPER_MODEL,
-        word_timestamps=False,
-        language="zh",
-        verbose=False,
-    )
-
-    segments = result.get("segments", [])
-    lines = ["WEBVTT", ""]
-    for seg in segments:
-        start = _fmt_vtt_ts(seg["start"])
-        end = _fmt_vtt_ts(seg["end"])
-        text = seg["text"].strip()
-        if text:
-            lines += [f"{start} --> {end}", text, ""]
-
-    vtt_path.write_text("\n".join(lines), encoding="utf-8")
-    print(f"  [vtt] {vtt_path.name} ({len(segments)} segments)")
-
-
-def _fmt_vtt_ts(seconds: float) -> str:
-    ms = int((seconds % 1) * 1000)
-    s = int(seconds)
-    h, rem = divmod(s, 3600)
-    m, s = divmod(rem, 60)
-    return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
-
-
-def run_vtt_to_txt(vtt_path: Path, txt_path: Path) -> None:
-    subprocess.run(
-        [sys.executable, str(VTT_TO_TXT), str(vtt_path), str(txt_path)],
-        check=True,
-    )
-
 
 def write_meta(subtitle_dir: Path, handle: str, ep_id: str, title: str, date: str, name: str) -> None:
     meta = subtitle_dir / f"{handle}_meta.txt"
@@ -168,15 +128,17 @@ def process(podcast: dict) -> None:
 
         audio_path = AUDIOS_DIR / f"{handle}_{ep['ep_id']}.mp3"
         vtt_path = subtitle_dir / f"{handle}_{ep['ep_id']}_zh.vtt"
-        txt_path = subtitle_dir / f"{handle}_{ep['ep_id']}_zh.txt"
 
         if not audio_path.exists():
             download_audio(ep["audio_url"], audio_path)
         else:
             print(f"  [dl] cached {audio_path.name}")
 
-        transcribe(audio_path, vtt_path)
-        run_vtt_to_txt(vtt_path, txt_path)
+        subprocess.run(
+            [sys.executable, str(TRANSCRIBE_PY), str(audio_path), str(vtt_path),
+             "--language", "zh", "--txt"],
+            check=True,
+        )
         write_meta(subtitle_dir, handle, ep["ep_id"], ep["title"], ep["date"], name)
         audio_path.unlink()
         print(f"  [rm] {audio_path.name}")

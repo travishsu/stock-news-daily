@@ -30,6 +30,36 @@ get_playlists() {
     grep -v '^\s*#' "$PLAYLISTS_FILE" | grep -v '^\s*$'
 }
 
+# 無字幕時：下載音訊並以 whisper 轉錄
+transcribe_fallback() {
+    local name="$1"
+    local video_id="$2"
+    local date_dir="$3"
+
+    local audio_dir="$PROJECT_DIR/audios"
+    mkdir -p "$audio_dir"
+    local audio_path="$audio_dir/${name}_${video_id}.mp3"
+    local vtt_path="$date_dir/${name}_${video_id}.zh.vtt"
+
+    echo "  [whisper] 無字幕，下載音訊進行轉錄..."
+    yt-dlp \
+        --extract-audio \
+        --audio-format mp3 \
+        --audio-quality 0 \
+        --output "$audio_path" \
+        --no-overwrites \
+        --ignore-errors \
+        "https://www.youtube.com/watch?v=${video_id}" 2>&1 | grep -v "^\[debug\]" || true
+
+    if [ -f "$audio_path" ]; then
+        uv run "$SCRIPT_DIR/transcribe.py" "$audio_path" "$vtt_path" --language zh --txt || true
+        rm -f "$audio_path"
+        echo "  [rm] ${audio_path##*/}"
+    else
+        echo "  [skip] 音訊下載失敗，略過轉錄"
+    fi
+}
+
 # 抓取單一頻道的最新影片字幕（含直播）
 fetch_channel() {
     local handle="$1"
@@ -115,6 +145,11 @@ fetch_channel() {
         fi
     done
 
+    # 若三種語言都無字幕，嘗試 whisper 轉錄
+    if ! ls "$date_dir/${handle}_${video_id}".*.vtt 2>/dev/null | grep -q .; then
+        transcribe_fallback "$handle" "$video_id" "$date_dir"
+    fi
+
     echo ""
 }
 
@@ -180,6 +215,11 @@ fetch_playlist() {
             break
         fi
     done
+
+    # 若三種語言都無字幕，嘗試 whisper 轉錄
+    if ! ls "$date_dir/${name}_${video_id}".*.vtt 2>/dev/null | grep -q .; then
+        transcribe_fallback "$name" "$video_id" "$date_dir"
+    fi
 
     echo ""
 }
