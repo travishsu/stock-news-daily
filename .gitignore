@@ -4,5 +4,6 @@ subtitles/
 *.srt
 *_meta.txt
 
+.env
 .venv/
 __pycache__/

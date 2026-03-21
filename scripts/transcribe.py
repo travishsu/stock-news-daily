@@ -12,11 +12,17 @@ Options:
 """
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_MODEL = "mlx-community/whisper-large-v3-turbo"
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
+
+DEFAULT_MODEL = os.environ.get("WHISPER_MODEL", "mlx-community/whisper-large-v3-turbo")
+DEFAULT_LANGUAGE = os.environ.get("TRANSCRIBE_LANGUAGE", "zh")
 VTT_TO_TXT = Path(__file__).parent / "vtt_to_txt.py"
 
 
@@ -32,7 +38,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Transcribe audio to VTT using mlx-whisper")
     parser.add_argument("audio_file", help="Input audio file path")
     parser.add_argument("output_vtt", help="Output VTT file path")
-    parser.add_argument("--language", default="zh", help="Whisper language code (default: zh)")
+    parser.add_argument("--language", default=DEFAULT_LANGUAGE, help="Whisper language code (default: zh)")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="mlx-whisper model repo or path")
     parser.add_argument("--txt", action="store_true", help="Also produce .txt via vtt_to_txt.py")
     args = parser.parse_args()

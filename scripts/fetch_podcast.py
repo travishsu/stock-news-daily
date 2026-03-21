@@ -9,6 +9,7 @@ Usage:
     uv run scripts/fetch_podcast.py @gooaye    # single podcast
 """
 
+import os
 import subprocess
 import sys
 import urllib.request
@@ -16,7 +17,14 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
+
+UA = os.environ.get(
+    "HTTP_USER_AGENT",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+)
 
 ROOT = Path(__file__).parent.parent
 AUDIOS_DIR = ROOT / "audios"
@@ -39,8 +47,10 @@ def load_podcasts() -> list[dict]:
     return podcasts
 
 
-def fetch_rss(rss_url: str, limit: int = 10) -> list[dict]:
+def fetch_rss(rss_url: str, limit: int | None = None) -> list[dict]:
     """Parse RSS and return up to `limit` latest episodes."""
+    if limit is None:
+        limit = int(os.environ.get("RSS_EPISODES_LIMIT", "10"))
     req = urllib.request.Request(rss_url, headers={"User-Agent": UA})
     with urllib.request.urlopen(req, timeout=15) as resp:
         raw = resp.read()
@@ -136,7 +146,7 @@ def process(podcast: dict) -> None:
 
         subprocess.run(
             [sys.executable, str(TRANSCRIBE_PY), str(audio_path), str(vtt_path),
-             "--language", "zh", "--txt"],
+             "--language", os.environ.get("TRANSCRIBE_LANGUAGE", "zh"), "--txt"],
             check=True,
         )
         write_meta(subtitle_dir, handle, ep["ep_id"], ep["title"], ep["date"], name)

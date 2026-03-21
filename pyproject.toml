@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "mlx-whisper",
+    "python-dotenv>=1.2.2",
     "requests",
 ]

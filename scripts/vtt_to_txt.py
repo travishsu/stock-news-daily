@@ -9,9 +9,16 @@ Usage:
     If output.txt is omitted, writes alongside input with .txt extension.
 """
 
+import os
 import re
 import sys
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent.parent / ".env")
+
+_DEFAULT_INTERVAL = int(os.environ.get("VTT_PARAGRAPH_INTERVAL", "300"))
 
 
 def parse_timestamp(ts: str) -> float:
@@ -87,7 +94,7 @@ def fmt_timestamp(seconds: float) -> str:
 
 
 def group_into_paragraphs(
-    cues: list[tuple[float, str]], interval: int = 300
+    cues: list[tuple[float, str]], interval: int = _DEFAULT_INTERVAL
 ) -> list[str]:
     """Group cues into paragraphs of `interval` seconds (default 5 min)."""
     if not cues:
@@ -116,7 +123,7 @@ def group_into_paragraphs(
     return paragraphs
 
 
-def convert(input_path: Path, output_path: Path, interval: int = 300) -> None:
+def convert(input_path: Path, output_path: Path, interval: int = _DEFAULT_INTERVAL) -> None:
     cues = parse_vtt(input_path)
     cues = deduplicate(cues)
     paragraphs = group_into_paragraphs(cues, interval)

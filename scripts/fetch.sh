@@ -8,6 +8,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# 載入 .env（若存在）
+# shellcheck disable=SC1091
+[ -f "$PROJECT_DIR/.env" ] && set -a && source "$PROJECT_DIR/.env" && set +a
+
 CHANNELS_FILE="$PROJECT_DIR/sources/channels.txt"
 PLAYLISTS_FILE="$PROJECT_DIR/sources/playlists.txt"
 SUB_DIR="$PROJECT_DIR/subtitles"
@@ -52,7 +57,7 @@ transcribe_fallback() {
         "https://www.youtube.com/watch?v=${video_id}" 2>&1 | grep -v "^\[debug\]" || true
 
     if [ -f "$audio_path" ]; then
-        uv run "$SCRIPT_DIR/transcribe.py" "$audio_path" "$vtt_path" --language zh --txt || true
+        uv run "$SCRIPT_DIR/transcribe.py" "$audio_path" "$vtt_path" --language "${TRANSCRIBE_LANGUAGE:-zh}" --txt || true
         rm -f "$audio_path"
         echo "  [rm] ${audio_path##*/}"
     else
@@ -108,7 +113,7 @@ fetch_channel() {
     echo "  影片：$title ($date)"
 
     # 依優先順序嘗試下載字幕：台灣繁中 → 簡中 → 英文
-    local -a LANG_PRIORITY=("zh-TW" "zh-Hans" "en")
+    IFS=' ' read -r -a LANG_PRIORITY <<< "${SUBTITLE_LANGS:-zh-TW zh-Hans en}"
 
     for lang in "${LANG_PRIORITY[@]}"; do
         local out_file="$date_dir/${handle}_${video_id}.${lang}.vtt"
@@ -184,7 +189,7 @@ fetch_playlist() {
     echo "$video_id|$title|$date|$channel" > "$date_dir/${name}_meta.txt"
     echo "  影片：$title ($date)"
 
-    local -a LANG_PRIORITY=("zh-TW" "zh-Hans" "en")
+    IFS=' ' read -r -a LANG_PRIORITY <<< "${SUBTITLE_LANGS:-zh-TW zh-Hans en}"
     for lang in "${LANG_PRIORITY[@]}"; do
         local out_file="$date_dir/${name}_${video_id}.${lang}.vtt"
 
