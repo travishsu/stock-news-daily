@@ -123,11 +123,25 @@ def group_into_paragraphs(
     return paragraphs
 
 
+def write_chunks(paragraphs: list[str], base_path: Path) -> None:
+    """Write each paragraph to its own file named {stem}_{HH-MM-SS}.txt."""
+    parent = base_path.parent
+    stem = base_path.stem   # e.g. "@channel_video.zh"
+    suffix = base_path.suffix  # ".txt"
+
+    for para in paragraphs:
+        m = re.match(r"^\[(\d{2}):(\d{2}):(\d{2})\]", para)
+        ts = f"{m.group(1)}-{m.group(2)}-{m.group(3)}" if m else "00-00-00"
+        chunk_path = parent / f"{stem}_{ts}{suffix}"
+        chunk_path.write_text(para + "\n", encoding="utf-8")
+
+
 def convert(input_path: Path, output_path: Path, interval: int = _DEFAULT_INTERVAL) -> None:
     cues = parse_vtt(input_path)
     cues = deduplicate(cues)
     paragraphs = group_into_paragraphs(cues, interval)
     output_path.write_text("\n\n".join(paragraphs) + "\n", encoding="utf-8")
+    write_chunks(paragraphs, output_path)
     print(f"  [txt] {output_path.name} ({len(paragraphs)} paragraphs)")
 
 
