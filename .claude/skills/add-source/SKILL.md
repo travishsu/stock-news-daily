@@ -1,6 +1,6 @@
 ---
 name: add-source
-description: 新增或移除股市日報的資料來源（YouTube 頻道、Podcast RSS、YouTube 播放清單）。當使用者說「幫我加一個頻道」、「新增這個播客」、「加這個播放清單」、「移除某頻道」，或直接提供 YouTube @handle、RSS URL、播放清單 URL 時觸發。
+description: 新增或移除日報的資料來源（YouTube 頻道、Podcast RSS、YouTube 播放清單）。當使用者說「幫我加一個頻道」、「新增這個播客」、「加這個播放清單」、「移除某頻道」，或直接提供 YouTube @handle、RSS URL、播放清單 URL 時觸發。
 ---
 
 # add-source
@@ -18,7 +18,8 @@ description: 新增或移除股市日報的資料來源（YouTube 頻道、Podca
 
 1. **判斷類型**：
    - YouTube `@handle` 或頻道 ID → `channels.txt`
-   - RSS feed URL（soundon.fm、firstory.me 等） → `podcasts.txt`
+   - RSS feed URL（soundon.fm、firstory.me 等） → `podcasts.txt`, 可從 https://getrssfeed.com/ 貼上 Apple/Spotify Podcast URL 轉換成 RSS URL
+     - 若使用者直接提供 Apple/Spotify Podcast URL，先詢問是否要轉換成 RSS URL
    - `youtube.com/playlist?list=` URL → `playlists.txt`
    - 若不確定，詢問使用者
 
