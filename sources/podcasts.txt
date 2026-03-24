@@ -8,3 +8,5 @@
 @wealthmag https://feeds.soundon.fm/podcasts/f9b8df6f-b612-4a27-8335-cfd2103c1aa4.xml 財訊雙週刊
 @macromicro https://feeds.soundon.fm/podcasts/d2aab16c-3a70-4023-b52b-e50f07852ecd.xml MacroMicro 財經M平方
 @statementdog https://feed.firstory.me/rss/user/clcftm46z000201z45w1c47fi 財報狗
+@財經一路發 https://feed.firstory.me/rss/user/ckuydilxj0ys508026gxkhbp4 財經一路發
+@沈雲驄說財經 https://feed.firstory.me/rss/user/cm5ywzljg008c01w0b4jg4pce 沈雲驄說財經
