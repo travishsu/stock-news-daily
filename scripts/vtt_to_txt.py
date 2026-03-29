@@ -94,31 +94,34 @@ def fmt_timestamp(seconds: float) -> str:
 
 
 def group_into_paragraphs(
-    cues: list[tuple[float, str]], interval: int = _DEFAULT_INTERVAL
+    cues: list[tuple[float, str]], interval: int = _DEFAULT_INTERVAL, line_interval: int = 60
 ) -> list[str]:
-    """Group cues into paragraphs of `interval` seconds (default 5 min)."""
+    """Group cues into chunks of `interval` seconds (default 5 min).
+    Within each chunk, cues are grouped into lines of `line_interval` seconds (default 1 min).
+    Returns one string per chunk; each string has one line per minute sub-bucket.
+    """
     if not cues:
         return []
 
-    paragraphs = []
-    current_bucket = int(cues[0][0] // interval)
-    current_start = cues[0][0]
-    current_sentences = []
-
+    # Build a dict: chunk_bucket -> {line_bucket -> (first_start, [texts])}
+    chunks: dict[int, dict[int, tuple[float, list[str]]]] = {}
     for start, text in cues:
-        bucket = int(start // interval)
-        if bucket != current_bucket:
-            if current_sentences:
-                label = fmt_timestamp(current_start)
-                paragraphs.append(f"[{label}] " + " ".join(current_sentences))
-            current_sentences = []
-            current_bucket = bucket
-            current_start = start
-        current_sentences.append(text)
+        c_bucket = int(start // interval)
+        l_bucket = int(start // line_interval)
+        if c_bucket not in chunks:
+            chunks[c_bucket] = {}
+        if l_bucket not in chunks[c_bucket]:
+            chunks[c_bucket][l_bucket] = (start, [])
+        chunks[c_bucket][l_bucket][1].append(text)
 
-    if current_sentences:
-        label = fmt_timestamp(current_start)
-        paragraphs.append(f"[{label}] " + " ".join(current_sentences))
+    paragraphs = []
+    for c_bucket in sorted(chunks):
+        lines = []
+        for l_bucket in sorted(chunks[c_bucket]):
+            first_start, texts = chunks[c_bucket][l_bucket]
+            label = fmt_timestamp(first_start)
+            lines.append(f"[{label}] " + " ".join(texts))
+        paragraphs.append("\n".join(lines))
 
     return paragraphs
 
