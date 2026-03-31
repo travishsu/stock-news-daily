@@ -131,7 +131,10 @@ def download_audio(audio_url: str, dest: Path) -> None:
 
 def write_meta(subtitle_dir: Path, handle: str, ep_id: str, title: str, date: str, name: str) -> None:
     meta = subtitle_dir / f"{handle}_meta.txt"
-    meta.write_text(f"{ep_id}|{title}|{date}|{name}\n", encoding="utf-8")
+    existing = meta.read_text(encoding="utf-8") if meta.exists() else ""
+    if ep_id not in existing:
+        with open(meta, "a", encoding="utf-8") as f:
+            f.write(f"{ep_id}|{title}|{date}|{name}\n")
     print(f"  [meta] {meta.name}")
 
 
