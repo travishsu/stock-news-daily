@@ -3,6 +3,7 @@ subtitles/
 *.vtt
 *.srt
 *_meta.txt
+.rlm
 
 .env
 .venv/
