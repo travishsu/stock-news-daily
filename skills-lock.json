@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "rlm": {
+      "source": "guia-matthieu/clawfu-skills",
+      "sourceType": "github",
+      "computedHash": "e7d0198d19f594c32434fee28815661fa9aa95a2ae0ffe8b95c5b27c49501bd4"
+    }
+  }
+}
