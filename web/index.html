@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Market Digest — 市場日報</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&family=Noto+Serif+TC:wght@300;400;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="grain">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+    <feColorMatrix type="matrix" values="0 0 0 0 0.95  0 0 0 0 0.92  0 0 0 0 0.84  0 0 0 0.045 0"/>
+  </filter>
+</svg>
+<div class="grain" aria-hidden="true"></div>
+
+<aside class="rail">
+  <div class="rail-head">
+    <div class="brand">
+      <span class="brand-mark">◆</span>
+      <span class="brand-name">MARKET&nbsp;DIGEST</span>
+    </div>
+    <div class="brand-sub">TERMINAL&nbsp;/&nbsp;ARCHIVE</div>
+  </div>
+
+  <nav class="rail-nav" id="rail-nav">
+    <div class="rail-loading">loading index…</div>
+  </nav>
+
+  <div class="rail-foot">
+    <span class="dot-live"></span>
+    <span id="foot-time">—</span>
+  </div>
+</aside>
+
+<main class="stage">
+  <header class="masthead">
+    <div class="mast-rule"></div>
+    <div class="mast-kicker"><span>市場日報</span><span class="sep">／</span><span>Market Digest</span></div>
+    <h1 class="mast-date" id="mast-date" aria-live="polite">
+      <span class="d">2</span><span class="d">0</span><span class="d">2</span><span class="d">6</span><span class="dash">—</span><span class="d">0</span><span class="d">0</span><span class="dash">—</span><span class="d">0</span><span class="d">0</span>
+    </h1>
+    <div class="mast-meta" id="mast-meta">
+      <span class="meta-tag" id="meta-kind">DAILY</span>
+      <span class="meta-dot">·</span>
+      <span id="meta-title">—</span>
+    </div>
+  </header>
+
+  <article class="paper" id="paper">
+    <p class="empty">選擇左側任一期別開始閱讀。</p>
+  </article>
+
+  <footer class="ticker">
+    <span class="tk-label">GENERATED</span>
+    <span class="tk-val" id="tk-gen">—</span>
+    <span class="tk-sep">▚</span>
+    <span class="tk-label">SOURCE</span>
+    <span class="tk-val">reports/*.md</span>
+    <span class="tk-sep">▚</span>
+    <span class="tk-label">STATUS</span>
+    <span class="tk-val"><span class="dot-live"></span> LIVE</span>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

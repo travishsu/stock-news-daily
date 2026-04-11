@@ -34,6 +34,23 @@ market-digest/
 
 Claude Code 會自動執行 fetch → 讀取字幕 → 分析 → 產出日報。
 
+## 瀏覽日報 / 週報（Web Viewer）
+
+`web/` 底下有一個零依賴的靜態檢視頁，用 Editorial Terminal 風格呈現所有 `reports/` 下的日報與週報。
+
+```bash
+# 1. 產生清單（每次新增日報後重跑一次即可）
+uv run python scripts/build_web.py
+
+# 2. 從專案根目錄啟動靜態伺服器
+python3 -m http.server 8000
+
+# 3. 瀏覽器打開
+open http://localhost:8000/web/
+```
+
+網址支援 hash 深連結，例如 `http://localhost:8000/web/#daily/2026-04-10` 或 `#weekly/2026-03-30_2026-04-05`，可直接分享特定一期。
+
 ## 自訂頻道
 
 編輯 `scripts/channels.txt`，每行一個 YouTube handle：
