@@ -140,7 +140,13 @@ body {
   border-color: var(--amber);
   box-shadow: 0 0 10px var(--amber);
 }
-.rail-item .label { font-weight: 500; font-size: 12px; }
+.rail-item .label {
+  font-weight: 500;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .rail-item .tag {
   font-size: 9px;
   letter-spacing: 0.14em;
@@ -257,6 +263,7 @@ body {
   letter-spacing: 0.22em;
 }
 .meta-tag.weekly { background: var(--sage); color: var(--ink); }
+.meta-tag.stock { background: var(--crimson); color: var(--parchment); }
 .meta-dot { color: var(--parchment-mute); }
 
 /* ============ PAPER (article) ============ */

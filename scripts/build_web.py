@@ -1,4 +1,4 @@
-"""Scan reports/ and emit web/manifest.json for the static viewer."""
+"""Scan reports/ and notes/ and emit web/manifest.json for the static viewer."""
 from __future__ import annotations
 
 import json
@@ -8,10 +8,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS_DIR = ROOT / "reports"
+TIMELINE_DIR = ROOT / "notes" / "stock-timeline"
 WEB_DIR = ROOT / "web"
 
 DAILY_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})\.md$")
 WEEKLY_RE = re.compile(r"^weekly_(\d{4}-\d{2}-\d{2})_(\d{4}-\d{2}-\d{2})\.md$")
+TW_STOCK_RE = re.compile(r"^(\d{4,6})-(.+)$")
 
 
 def read_title(path: Path) -> str:
@@ -26,6 +28,42 @@ def read_title(path: Path) -> str:
     except OSError:
         pass
     return path.stem
+
+
+def header_field(text: str, label: str) -> str:
+    """Pull `**{label}**：value` out of a note's header block."""
+    m = re.search(rf"\*\*{label}\*\*[：:]\s*(.+)", text)
+    return m.group(1).strip() if m else ""
+
+
+def parse_timeline(md: Path) -> dict:
+    text = md.read_text(encoding="utf-8", errors="replace")
+    title = read_title(md)
+    stem = md.stem
+
+    if m := TW_STOCK_RE.match(stem):
+        ticker, name = m.group(1), m.group(2)
+    else:
+        ticker = stem.upper()
+        name = title.replace("事件時間軸", "").replace(ticker, "").strip() or ticker
+
+    coverage = header_field(text, "涵蓋範圍")
+    start, _, end = (p.strip() for p in coverage.partition("～"))
+
+    keywords = header_field(text, "掃描關鍵字").strip("`")
+    aliases = [k.strip() for k in keywords.split("|") if k.strip()]
+
+    return {
+        "id": ticker,
+        "ticker": ticker,
+        "name": name,
+        "file": md.name,
+        "title": title,
+        "updated": header_field(text, "最後更新"),
+        "start": start,
+        "end": end,
+        "aliases": aliases,
+    }
 
 
 def build() -> dict:
@@ -48,10 +86,18 @@ def build() -> dict:
     daily.sort(key=lambda r: r["date"], reverse=True)
     weekly.sort(key=lambda r: r["end"], reverse=True)
 
+    stocks = [
+        parse_timeline(md)
+        for md in sorted(TIMELINE_DIR.glob("*.md"))
+        if md.name != "CLAUDE.md"
+    ]
+    stocks.sort(key=lambda r: r["id"])
+
     return {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "daily": daily,
         "weekly": weekly,
+        "stocks": stocks,
     }
 
 
@@ -65,7 +111,8 @@ def main() -> None:
     )
     print(
         f"wrote {out.relative_to(ROOT)} "
-        f"({len(manifest['daily'])} daily, {len(manifest['weekly'])} weekly)"
+        f"({len(manifest['daily'])} daily, {len(manifest['weekly'])} weekly, "
+        f"{len(manifest['stocks'])} stocks)"
     )
 
 

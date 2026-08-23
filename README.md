@@ -34,9 +34,9 @@ market-digest/
 
 Claude Code 會自動執行 fetch → 讀取字幕 → 分析 → 產出日報。
 
-## 瀏覽日報 / 週報（Web Viewer）
+## 瀏覽日報 / 週報 / 個股時間軸（Web Viewer）
 
-`web/` 底下有一個零依賴的靜態檢視頁，用 Editorial Terminal 風格呈現所有 `reports/` 下的日報與週報。
+`web/` 底下有一個零依賴的靜態檢視頁，用 Editorial Terminal 風格呈現所有 `reports/` 下的日報與週報，以及 `notes/stock-timeline/` 下的個股事件時間軸。
 
 ```bash
 # 1. 產生清單（每次新增日報後重跑一次即可）
@@ -49,7 +49,9 @@ python3 -m http.server 8000
 open http://localhost:8000/web/
 ```
 
-網址支援 hash 深連結，例如 `http://localhost:8000/web/#daily/2026-04-10` 或 `#weekly/2026-03-30_2026-04-05`，可直接分享特定一期。
+網址支援 hash 深連結，例如 `http://localhost:8000/web/#daily/2026-04-10`、`#weekly/2026-03-30_2026-04-05` 或 `#stock/AVGO`，可直接分享特定一期或某檔個股。
+
+側邊欄最上方的 **STOCKS** 區塊列出所有個股時間軸（ticker + 名稱，右側為最後更新日）。筆記內的 `[[AVGO]]` 這類 wiki 連結會自動轉成可點擊連結，指向對應個股頁；沒有對應頁面的（如主題筆記）維持純文字。新增個股筆記後重跑 `build_web.py` 即會出現。
 
 ## 自訂頻道
 
